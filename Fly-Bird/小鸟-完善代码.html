@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<style>
+	        canvas {
+	            border:1px solid red;
+	        }
+	        img {
+	            display: none;
+	        }
+    </style>
+	</head>
+	<body>
+		<canvas id="cvs" width="" height=""></canvas>
+		<script type="text/javascript" src="util.js"></script>
+		<script type="text/javascript" src="bird.js"></script>
+		<script type="text/javascript" src="pipe.js"></script>
+		<script type="text/javascript" src="sky.js"></script>		
+		<script type="text/javascript" src="land.js"></script>
+		<script type="text/javascript">
+			var cvs=document.querySelector("#cvs");
+			var ctx=cvs.getContext('2d');
+			util.loadImage({
+				land:'../img/land.png',
+				bird: '../img/bird.png',
+            	pipeDown: '../img/pipeDown.png',
+            	pipeUp: '../img/pipeUp.png',
+            	sky: '../img/sky.png'
+			},function(imgObj){
+					
+	            // 根据背景的大小设置画布的大小
+	            cvs.width = imgObj.sky.width;
+	            cvs.height = imgObj.sky.height;
+	            var roles=[];
+	            
+	            // 背景2个
+	            roles.push( getSky( ctx, imgObj.sky, 3 ) );
+	            roles.push( getSky( ctx, imgObj.sky, 3 ) );
+	            
+	            // 管道6个
+            	for ( var i = 0; i < 6; i++ ) {
+               	 	roles.push( getPipe( ctx, imgObj.pipeDown, imgObj.pipeUp, 100, imgObj.land.height, 3 ) );
+           	 	}
+            	
+            	// 大地4个
+           		for ( var i = 0; i < 4; i++ ) {
+                	roles.push( getLand( ctx, imgObj.land, 3 ) );
+            	}
+           		
+           		//一个鸟
+           		roles.push(getBird(ctx,imgObj.bird,3,1,10,10));
+           		
+           		var timer=setInterval(function(){
+					/**
+					 * 判断小鸟碰到管道或者飞出界面
+					 * 暂停定时器，并写上一段文字
+					 */
+					var bird=getBird();
+					var birdCoreX=bird.x+bird.width/2;
+					var birdCoreY=bird.y+bird.height/2;
+					 if ( ctx.isPointInPath( birdCoreX, birdCoreY )
+                        || birdCoreY < 0
+                        || birdCoreY > (ctx.canvas.height - imgObj.land.height) ){
+						clearInterval(timer);
+						ctx.fillStyle="rgba(100,100,100,.8)"
+						ctx.fillRect(0,0,ctx.canvas.width,ctx.canvas.height);
+						ctx.textAlign="center";
+						ctx.fillStyle="red";
+						ctx.font="900 40px 微软雅黑";
+						ctx.fillText("趴，你死了！！",ctx.canvas.width/2,ctx.canvas.height/2);
+						return;
+					}
+                    //先清除六个管道的痕迹
+                    ctx.beginPath();
+                    roles.forEach(function(role){
+	                    	role.draw();
+	                    	role.update();
+                   		}                    	
+                  	);
+           		}, 50);
+        });
+		</script>	
+		
+	</body>
+</html>
